@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de instalación</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#080c12">
+<style>body{margin:0;background:#080c12;color:#e6f1f7;font:16px/1.5 system-ui,sans-serif;padding:20px;max-width:640px;margin:auto}h1{font-size:22px}
+.r{background:#0f1620;border:1px solid #1f3040;border-radius:10px;padding:10px 14px;margin:8px 0}.ok{border-left:4px solid #19d98b}.no{border-left:4px solid #ff5470}.wa{border-left:4px solid #ffb300}
+small{color:#7f98a8;display:block}button{background:#00d9ff;color:#00131a;border:0;border-radius:8px;padding:12px 18px;font-weight:700;margin-top:10px;width:100%;font-size:16px}</style></head><body>
+<h1>Diagnóstico de instalación</h1><div id="o"></div><button id="b" style="display:none">Instalar aplicación</button>
+<script>
+const o=document.getElementById('o'),add=(t,c,d)=>o.insertAdjacentHTML('beforeend',`<div class="r ${c}">${t}<small>${d||''}</small></div>`);
+let ev;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ev=e;const b=document.getElementById('b');b.style.display='block';b.onclick=()=>ev.prompt();add('Chrome SÍ permite instalar ahora','ok','Toca el botón azul de abajo.')});
+(async()=>{
+add(location.protocol==='https:'?'Conexión segura (HTTPS)':'Falta HTTPS',location.protocol==='https:'?'ok':'no',location.href);
+if(matchMedia('(display-mode: standalone)').matches)add('Ya estás dentro de la app instalada','ok');
+let m;try{const r=await fetch('manifest.json',{cache:'no-store'});if(!r.ok)throw 0;m=await r.json();add('manifest.json encontrado','ok',m.name+' · '+m.display)}catch(e){add('No se encuentra manifest.json','no','Súbelo a la MISMA carpeta que index.html y que se llame exactamente manifest.json')}
+if(m){for(const i of m.icons||[]){try{const r=await fetch(i.src,{cache:'no-store'});if(!r.ok)throw 0;const b=await r.blob();if(!/png/.test(b.type))throw 0;add('Ícono '+i.src+' ('+i.sizes+')','ok')}catch(e){add('Falta el ícono '+i.src,'no','Súbelo con ese nombre exacto')}}
+try{const r=await fetch(m.start_url||'./',{cache:'no-store'});add(r.ok?'Página de inicio accesible':'Página de inicio no responde',r.ok?'ok':'no')}catch(e){add('Página de inicio no responde','no')}}
+try{const r=await fetch('sw.js',{cache:'no-store'});if(!r.ok)throw 0;add('sw.js encontrado','ok')}catch(e){add('No se encuentra sw.js','no','Súbelo a la misma carpeta que index.html')}
+if('serviceWorker'in navigator){try{let g=await navigator.serviceWorker.getRegistration();if(!g)g=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;add('Service worker activo','ok')}catch(e){add('El service worker no pudo activarse','no',String(e))}}
+setTimeout(()=>{if(!ev)add('Chrome aún no ofrece instalar','wa','Si todo lo de arriba está en verde: recarga la página, espera unos segundos o cierra y abre Chrome. Si ya hay un acceso directo viejo, bórralo.')},4000)
+})();
+</script></body></html>
